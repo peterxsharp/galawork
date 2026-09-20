@@ -57,3 +57,16 @@ so every variation stays true to the deck's colour palette and design language:
    1080p loop, for use as a transition between event segments.
 
 All videos are seamless loops (end frame matches start frame) suitable for continuous projection.
+
+---
+
+## Build Pipeline
+
+All source code and scripts used to generate the video files are in the **`build/`** directory:
+
+- **Frame capture scripts** (Playwright) — `capture_*.py`, `shot_*.py`
+- **HTML sources** (pre-embedding) — `literal_source.html`, `cinematic_source.html`
+- **FFmpeg encoding script** — `encode.sh`
+- **Complete documentation** — `build/README.md`
+
+The pipeline: HTML → Playwright (360 frames @ 30fps) → FFmpeg (H.264, CRF 17) → seamless-loop MP4.
