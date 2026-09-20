@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBC Performance Gala 2026</title>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:#07102b; font-family: Georgia, 'Times New Roman', serif; }
+canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+#ui {
+  position:fixed; inset:0; z-index:1;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:5vh; pointer-events:none;
+}
+
+/* ── Star wrap ─────────────────── */
+#star-wrap {
+  position:relative;
+  width: clamp(200px, 30vw, 340px);
+  height: clamp(200px, 30vw, 340px);
+  flex-shrink:0;
+}
+
+#golden-ring {
+  position:absolute; inset:0; border-radius:50%;
+  border:3px solid rgba(255,220,80,1.0);
+  box-shadow:
+    0 0 18px 5px  rgba(255,220, 60,1.0),
+    0 0 50px 10px rgba(255,200, 30,.90),
+    0 0 100px 18px rgba(255,180, 10,.60),
+    0 0 170px 30px rgba(255,160,  0,.28),
+    inset 0 0 22px 5px rgba(255,210, 60,.60);
+  animation: ring-breathe 4.5s ease-in-out infinite;
+}
+@keyframes ring-breathe {
+  0%,100% {
+    box-shadow:
+      0 0 18px 5px  rgba(255,220, 60,1.0),
+      0 0 50px 10px rgba(255,200, 30,.90),
+      0 0 100px 18px rgba(255,180, 10,.60),
+      0 0 170px 30px rgba(255,160,  0,.28),
+      inset 0 0 22px 5px rgba(255,210, 60,.60);
+  }
+  50% {
+    box-shadow:
+      0 0 28px 8px  rgba(255,235, 80,1.0),
+      0 0 75px 16px rgba(255,215, 50,1.0),
+      0 0 145px 28px rgba(255,190, 20,.80),
+      0 0 230px 45px rgba(255,170,  0,.45),
+      inset 0 0 36px 8px rgba(255,225, 80,.80);
+  }
+}
+
+#star-svg {
+  position:absolute; width:82%; height:82%; top:9%; left:9%;
+  animation: star-spin 26s linear infinite;
+  filter:
+    drop-shadow(0 0 10px rgba(255,255,200,1.0))
+    drop-shadow(0 0 28px rgba(255,220, 60,1.0))
+    drop-shadow(0 0 65px rgba(255,190, 30,.90))
+    drop-shadow(0 0 110px rgba(255,160,  0,.60));
+}
+@keyframes star-spin { to { transform: rotate(360deg); } }
+
+#logo {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+}
+#logo svg {
+  width: clamp(44px, 5.5vw, 68px); height:auto;
+  filter: drop-shadow(0 0 10px rgba(100,180,255,.90))
+          drop-shadow(0 0 24px rgba(60,140,255,.70));
+}
+
+/* ── Title text ─────────────────── */
+#title { text-align:center; line-height:1.22; }
+.t1 {
+  display:block;
+  font-size: clamp(18px, 3.2vw, 52px);
+  font-weight:400; color:#ffffff;
+  letter-spacing:.10em;
+  text-shadow:
+    0 0 12px rgba(80,200,255,1.0),
+    0 0 36px rgba(40,160,255,.90),
+    0 0 75px rgba(20,120,255,.60),
+    0 0 130px rgba(10,90,255,.35);
+  animation: text-pulse 5s ease-in-out infinite;
+}
+.t2 {
+  display:block;
+  font-size: clamp(28px, 5.2vw, 78px);
+  font-weight:700; color:#ffffff;
+  letter-spacing:.20em;
+  text-shadow:
+    0 0 12px rgba(80,200,255,1.0),
+    0 0 36px rgba(40,160,255,.90),
+    0 0 75px rgba(20,120,255,.60),
+    0 0 130px rgba(10,90,255,.35);
+  animation: text-pulse 5s ease-in-out infinite;
+  animation-delay: .8s;
+}
+@keyframes text-pulse {
+  0%,100% {
+    text-shadow:
+      0 0 12px rgba(80,200,255,1.0),
+      0 0 36px rgba(40,160,255,.90),
+      0 0 75px rgba(20,120,255,.60),
+      0 0 130px rgba(10,90,255,.35);
+  }
+  50% {
+    text-shadow:
+      0 0 20px rgba(120,230,255,1.0),
+      0 0 55px rgba(60,190,255,1.0),
+      0 0 110px rgba(30,150,255,.85),
+      0 0 190px rgba(15,110,255,.55);
+  }
+}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <div id="star-wrap">
+    <div id="golden-ring"></div>
+
+    <svg id="star-svg" viewBox="-120 -120 240 240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="sg" cx="50%" cy="28%" r="72%">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="18%"  stop-color="#fffde0"/>
+          <stop offset="42%"  stop-color="#ffe060"/>
+          <stop offset="64%"  stop-color="#d4a500"/>
+          <stop offset="82%"  stop-color="#8a6200"/>
+          <stop offset="100%" stop-color="#3e2800"/>
+        </radialGradient>
+        <filter id="gf" x="-45%" y="-45%" width="190%" height="190%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Shadow star -->
+      <polygon
+        points="0,-108 25.2,-35.1 101.9,-33.8 40.7,13.7 63.0,87.0 0,43.5 -63.0,87.0 -40.7,13.7 -101.9,-33.8 -25.2,-35.1"
+        fill="#0b1f90" opacity="0.45"/>
+      <!-- Main star -->
+      <polygon
+        points="0,-100 23.5,-32.4 95.1,-30.9 38.0,12.4 58.8,80.9 0,40.0 -58.8,80.9 -38.0,12.4 -95.1,-30.9 -23.5,-32.4"
+        fill="url(#sg)" filter="url(#gf)"/>
+    </svg>
+
+    <div id="logo">
+      <svg viewBox="0 0 56 70" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="shg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   stop-color="#2252c8"/>
+            <stop offset="100%" stop-color="#0a1e82"/>
+          </linearGradient>
+        </defs>
+        <path d="M3,3 L53,3 L53,40 Q53,64 28,68 Q3,64 3,40 Z"
+          fill="url(#shg)" stroke="#ffe060" stroke-width="2.5"/>
+        <circle cx="28" cy="26" r="14" fill="none" stroke="#aaddff" stroke-width="1.8"/>
+        <ellipse cx="28" cy="26" rx="7" ry="14" fill="none" stroke="#aaddff" stroke-width="1.2"/>
+        <line x1="14" y1="26" x2="42" y2="26" stroke="#aaddff" stroke-width="1.2"/>
+        <line x1="15" y1="20" x2="41" y2="20" stroke="#aaddff" stroke-width="0.8" opacity="0.9"/>
+        <line x1="15" y1="32" x2="41" y2="32" stroke="#aaddff" stroke-width="0.8" opacity="0.9"/>
+        <text x="28" y="54.5" text-anchor="middle"
+          font-family="'Arial Black',Arial,sans-serif" font-weight="900"
+          font-size="10.5" letter-spacing="2.3" fill="#ffe060">RBC</text>
+      </svg>
+    </div>
+  </div>
+
+  <div id="title">
+    <span class="t1">RBC Performance Gala</span>
+    <span class="t2">2026</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const canvas = document.getElementById('c');
+  const ctx    = canvas.getContext('2d');
+  const wrap   = document.getElementById('star-wrap');
+
+  let W, H, CX, CY, ringRadius;
+
+  function layout () {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    const r  = wrap.getBoundingClientRect();
+    CX       = r.left + r.width  / 2;
+    CY       = r.top  + r.height / 2;
+    ringRadius = r.width / 2;
+  }
+
+  /* ── Particles / sparks ─────────────────────────── */
+  const N_PART = 220;
+  let parts = [];
+
+  function mkPart () {
+    const rng = Math.random();
+    return {
+      x:  Math.random() * (W  || window.innerWidth),
+      y:  Math.random() * (H  || window.innerHeight),
+      sz: Math.random() * 2.6 + 0.5,
+      ba: Math.random() * 0.70 + 0.30,
+      ph: Math.random() * Math.PI * 2,
+      sp: Math.random() * 0.022 + 0.008,
+      col: rng < .45 ? '#ffffff'
+         : rng < .65 ? '#80eeff'
+         : rng < .80 ? '#ffe040'
+         : rng < .92 ? '#ff8820'
+         :              '#c0e0ff',
+      spark: Math.random() < 0.22,
+    };
+  }
+
+  function initParts () { parts = Array.from({ length: N_PART }, mkPart); }
+
+  function drawPart (p, t) {
+    const a = p.ba * (0.35 + 0.65 * Math.abs(Math.sin(p.ph + t * p.sp)));
+    if (a < 0.03) return;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle   = p.col;
+    ctx.shadowColor = p.col;
+    if (p.spark) {
+      const s = p.sz * 5.5, sf = s * 0.22;
+      ctx.shadowBlur = s * 5;
+      ctx.beginPath();
+      ctx.moveTo(p.x,      p.y - s);
+      ctx.lineTo(p.x + sf, p.y - sf);
+      ctx.lineTo(p.x + s,  p.y);
+      ctx.lineTo(p.x + sf, p.y + sf);
+      ctx.lineTo(p.x,      p.y + s);
+      ctx.lineTo(p.x - sf, p.y + sf);
+      ctx.lineTo(p.x - s,  p.y);
+      ctx.lineTo(p.x - sf, p.y - sf);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.shadowBlur = p.sz * 7;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* ── Background ─────────────────────────────────── */
+  const NEBULAE = [
+    { xf:.50, yf:.34, rf:.52, r:  20, g:  60, b:175, a:.95 },
+    { xf:.32, yf:.56, rf:.38, r:  14, g:  45, b:150, a:.72 },
+    { xf:.72, yf:.58, rf:.32, r:  12, g:  50, b:165, a:.65 },
+    { xf:.16, yf:.38, rf:.30, r:  42, g:  18, b:140, a:.62 },
+    { xf:.84, yf:.26, rf:.27, r:  10, g:  35, b:180, a:.55 },
+    { xf:.60, yf:.74, rf:.29, r:   8, g:  30, b:140, a:.50 },
+    { xf:.40, yf:.12, rf:.24, r:  10, g:  26, b:160, a:.48 },
+  ];
+
+  function drawBackground (t) {
+    ctx.fillStyle = '#07102b';
+    ctx.fillRect(0, 0, W, H);
+    const s = Math.max(W, H);
+    NEBULAE.forEach((n, i) => {
+      const x = n.xf * W, y = n.yf * H;
+      const pulse = 1 + 0.045 * Math.sin(t * 0.00038 + i * 2.1);
+      const r = n.rf * s * pulse;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0,    `rgba(${n.r},${n.g},${n.b},${n.a})`);
+      g.addColorStop(0.45, `rgba(${n.r},${n.g},${n.b},${+(n.a*0.40).toFixed(2)})`);
+      g.addColorStop(1,    `rgba(${n.r},${n.g},${n.b},0)`);
+      ctx.save(); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  /* ── Bokeh blobs ────────────────────────────────── */
+  const BOKEH = [
+    { xf:.028, yf:.52, r:120, cr:255, cg:110, cb:  0, a:.58 },
+    { xf:.060, yf:.70, r: 80, cr:255, cg:140, cb: 10, a:.48 },
+    { xf:.010, yf:.36, r: 65, cr:220, cg: 80, cb:  0, a:.42 },
+    { xf:.120, yf:.80, r: 85, cr:200, cg: 95, cb: 12, a:.38 },
+    { xf:.040, yf:.24, r: 52, cr:255, cg:160, cb: 28, a:.34 },
+    { xf:.940, yf:.16, r: 65, cr: 20, cg: 90, cb:230, a:.45 },
+    { xf:.970, yf:.48, r: 75, cr: 10, cg: 65, cb:220, a:.42 },
+    { xf:.880, yf:.65, r: 55, cr: 15, cg: 78, cb:235, a:.36 },
+    { xf:.820, yf:.88, r: 50, cr: 18, cg: 70, cb:210, a:.32 },
+  ];
+
+  function drawBokeh (t) {
+    const sc = H / 750;
+    BOKEH.forEach((b, i) => {
+      const x = b.xf * W, y = b.yf * H;
+      const pulse = 1 + 0.08 * Math.sin(t * 0.00065 + i * 1.9);
+      const r = b.r * pulse * sc;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0,   `rgba(${b.cr},${b.cg},${b.cb},.92)`);
+      g.addColorStop(.35, `rgba(${b.cr},${b.cg},${b.cb},.52)`);
+      g.addColorStop(.70, `rgba(${b.cr},${b.cg},${b.cb},.14)`);
+      g.addColorStop(1,   `rgba(${b.cr},${b.cg},${b.cb},0)`);
+      ctx.save();
+      ctx.globalAlpha = b.a;
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  /* ── Central star glow ──────────────────────────── */
+  function drawStarGlow (t) {
+    const pulse = 1 + 0.10 * Math.sin(t * 0.00098);
+    const r = ringRadius * 5.5 * pulse;
+    const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, r);
+    g.addColorStop(0,    'rgba(255,240,140,.32)');
+    g.addColorStop(0.18, 'rgba(255,200, 40,.22)');
+    g.addColorStop(0.42, 'rgba( 80,170,255,.14)');
+    g.addColorStop(0.70, 'rgba( 30,100,255,.07)');
+    g.addColorStop(1,    'rgba(  0,  0,  0, 0)');
+    ctx.save(); ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ── Swirl arms — SOLID continuous, thick ───────── */
+  //
+  // Each arm is a single smooth spiral path drawn twice:
+  //   1. Wide, very glowing under-layer  (shadowBlur high, lower alpha)
+  //   2. Bright, thinner top-layer       (shadowBlur moderate, full alpha)
+  //
+  // NO dashes. NO gaps. The spiral slowly rotates over time.
+  //
+  const SWIRLS = [
+    // Bright cyan arms
+    { base:-0.30, sw:1.80*Math.PI, Ro:.95, r:  0, g:230, b:255, w:3.8, a:.92 },
+    { base: 0.58, sw:1.68*Math.PI, Ro:.88, r:  0, g:210, b:255, w:3.2, a:.85 },
+    { base: 1.35, sw:1.58*Math.PI, Ro:.82, r: 80, g:230, b:255, w:2.8, a:.78 },
+    { base: 2.14, sw:1.65*Math.PI, Ro:.85, r: 30, g:190, b:255, w:2.4, a:.70 },
+    { base: 2.95, sw:1.50*Math.PI, Ro:.78, r: 60, g:200, b:255, w:2.0, a:.62 },
+    { base: 3.78, sw:1.38*Math.PI, Ro:.72, r:  0, g:220, b:255, w:1.6, a:.54 },
+    // Gold arms
+    { base: 4.65, sw:1.32*Math.PI, Ro:.80, r:255, g:210, b: 20, w:3.0, a:.88 },
+    { base: 5.45, sw:1.22*Math.PI, Ro:.72, r:220, g:175, b:  0, w:2.2, a:.72 },
+    { base: 0.22, sw:1.16*Math.PI, Ro:.65, r:255, g:235, b: 60, w:1.6, a:.60 },
+  ];
+
+  const N_SEG = 150;
+
+  function buildSpiralPoints (arm, reach, t) {
+    const ROT = 0.000088;   // slow rotation (rad/ms)
+    const oR  = arm.Ro * reach;
+    const iR  = ringRadius * 0.95;
+    const xs  = new Float32Array(N_SEG + 1);
+    const ys  = new Float32Array(N_SEG + 1);
+    for (let i = 0; i <= N_SEG; i++) {
+      const tt  = i / N_SEG;
+      const ang = arm.base + arm.sw * tt + t * ROT;
+      const r   = oR - (oR - iR) * Math.pow(tt, 0.68);
+      xs[i] = CX + r * Math.cos(ang);
+      ys[i] = CY + r * Math.sin(ang);
+    }
+    return { xs, ys };
+  }
+
+  function drawSwirls (t) {
+    const reach = Math.max(CX, W - CX, CY, H - CY) * 1.18;
+    ctx.setLineDash([]);   // always solid
+
+    SWIRLS.forEach(arm => {
+      const { xs, ys } = buildSpiralPoints(arm, reach, t);
+      const col = `rgb(${arm.r},${arm.g},${arm.b})`;
+
+      // ── Layer 1: wide glowing underpaint ──
+      ctx.save();
+      ctx.globalAlpha = arm.a * 0.45;
+      ctx.strokeStyle = col;
+      ctx.lineWidth   = arm.w * 3.8;
+      ctx.shadowColor = col;
+      ctx.shadowBlur  = 55;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(xs[0], ys[0]);
+      for (let i = 1; i <= N_SEG; i++) ctx.lineTo(xs[i], ys[i]);
+      ctx.stroke();
+      ctx.restore();
+
+      // ── Layer 2: bright crisp line ──
+      ctx.save();
+      ctx.globalAlpha = arm.a;
+      ctx.strokeStyle = col;
+      ctx.lineWidth   = arm.w;
+      ctx.shadowColor = col;
+      ctx.shadowBlur  = 28;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(xs[0], ys[0]);
+      for (let i = 1; i <= N_SEG; i++) ctx.lineTo(xs[i], ys[i]);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  /* ── Animation loop ─────────────────────────────── */
+  let t0 = null;
+
+  function frame (ts) {
+    if (!t0) t0 = ts;
+    const t = ts - t0;
+    drawBackground(t);
+    drawBokeh(t);
+    drawStarGlow(t);
+    drawSwirls(t);
+    parts.forEach(p => drawPart(p, t));
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(() => {
+    layout(); initParts();
+    window.addEventListener('resize', () => {
+      requestAnimationFrame(() => { layout(); initParts(); });
+    });
+    requestAnimationFrame(frame);
+  });
+
+})();
+</script>
+</body>
+</html>
